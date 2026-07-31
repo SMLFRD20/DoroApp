@@ -2,10 +2,24 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { Home, CheckSquare, BarChart3, User } from "lucide-react";
 import { cn } from "./ui/utils";
 import { motion, AnimatePresence } from "motion/react";
+import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
 
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { session, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !session) {
+      navigate("/");
+    }
+  }, [session, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Cargando...</div>;
+  }
+
 
   const navItems = [
     { path: "/app", label: "Inicio", icon: Home },

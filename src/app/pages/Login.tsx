@@ -1,18 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Sprout } from "lucide-react";
+import { supabase } from "../services/supabaseClient";
+import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  
+  useEffect(() => {
+    if (session) {
+      navigate("/app");
+    }
+  }, [session, navigate]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/app");
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      navigate("/app");
+    } catch (error: any) {
+      toast.error(error.message || "Ha ocurrido un error al iniciar sesión");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,6 +69,7 @@ export default function Login() {
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
               className="h-14 rounded-2xl bg-card border-border/50 px-4 focus:ring-primary focus:border-primary shadow-sm text-base transition-all"
             />
           </div>
@@ -56,6 +82,8 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
               className="h-14 rounded-2xl bg-card border-border/50 px-4 focus:ring-primary focus:border-primary shadow-sm text-base transition-all"
             />
           </div>
@@ -71,17 +99,18 @@ export default function Login() {
 
           <Button
             type="submit"
+            disabled={loading}
             className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl shadow-[0_8px_20px_rgba(168,195,160,0.4)] text-base font-medium transition-all active:scale-[0.98] mt-4"
           >
-            Entrar al flujo
+            {loading ? "Cargando..." : "Entrar al flujo"}
           </Button>
 
-          <div className="text-center -pt-10
-          ">
+          <div className="text-center -pt-10">
             <p className="text-sm font-medium text-muted-foreground -m-[5px]">
               ¿Nueva semilla?{" "}
               <button
                 type="button"
+                onClick={() => navigate("/signup")}
                 className="text-primary hover:text-primary/80 font-semibold transition-colors"
               >
                 Crear cuenta

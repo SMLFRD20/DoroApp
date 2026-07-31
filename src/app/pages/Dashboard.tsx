@@ -5,9 +5,89 @@ import { Card } from "../components/ui/card";
 import { Timer, Clock, TrendingUp, CheckCircle2, ChevronRight, Sprout, Target, Coffee } from "lucide-react";
 import { Progress } from "../components/ui/progress";
 import { motion } from "motion/react";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../services/supabaseClient";
+import { useState, useEffect } from "react";
+import { ApiService } from "../services/apiService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const firstName = session?.user?.user_metadata?.first_name || "Semilla";
+
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [completedTasksCount, setCompletedTasksCount] = useState(0);
+  const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [pomodoros, setPomodoros] = useState<any[]>([]);
+  const [nextTask, setNextTask] = useState<any>(null);
+  const [quote, setQuote] = useState({ content: "La naturaleza no se apresura, sin embargo todo se logra.", author: "Lao Tsé" });
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchTasks();
+      fetchPomodoros();
+    }
+    
+    // Fetch random quote
+    const quoteApi = new ApiService("https://dummyjson.com");
+    quoteApi.fetchData().then((data) => {
+      if (data && data.quote) {
+        setQuote({ content: data.quote, author: data.author });
+      } else if (data && data.content) {
+        setQuote({ content: data.content, author: data.author });
+      }
+    }).catch(e => console.error("Error fetching quote:", e));
+  }, [session]);
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      
+      const allTasks = data || [];
+      setTasks(allTasks);
+      setCompletedTasksCount(allTasks.filter(t => t.is_completed).length);
+      
+      const pending = allTasks.filter(t => !t.is_completed);
+      setPendingTasksCount(pending.length);
+      
+      if (pending.length > 0) {
+        setNextTask(pending[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks for dashboard:", error);
+    }
+  };
+
+  const fetchPomodoros = async () => {
+    try {
+      // Get today's beginning
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data, error } = await supabase
+        .from('pomodoro_sessions')
+        .select('*')
+        .eq('type', 'work')
+        .gte('created_at', today.toISOString());
+        
+      if (!error && data) setPomodoros(data);
+    } catch (error) {
+      console.error("Error fetching pomodoros:", error);
+    }
+  };
+
+  const totalPomodorosGoal = 8;
+  const currentPomodoros = pomodoros.length;
+  const progressPercent = Math.min((currentPomodoros / totalPomodorosGoal) * 100, 100);
+  
+  // Fake productivity calculation for demo purposes (based on completed tasks)
+  const productivity = tasks.length > 0 
+    ? Math.round((completedTasksCount / tasks.length) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background p-6 font-sans">
@@ -19,11 +99,11 @@ export default function Dashboard() {
         className="flex items-center justify-between mb-8 mt-2"
       >
         <div>
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight mb-1">¡Buenos días, Sergio!</h1>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight mb-1">¡Buenos días, {firstName}!</h1>
           <p className="text-sm text-muted-foreground">Encuentra tu ritmo hoy</p>
         </div>
-        <div className="w-12 h-12 rounded-full border-2 border-primary/20 overflow-hidden shadow-sm">
-          <img src={image_imagen_2026_06_26_140203897} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="w-12 h-12 rounded-full border-2 border-primary/20 overflow-hidden shadow-sm flex items-center justify-center bg-primary/10 text-primary font-bold">
+          {firstName.charAt(0).toUpperCase()}
         </div>
       </motion.div>
 
@@ -62,13 +142,13 @@ export default function Dashboard() {
             <Target className="w-4 h-4 text-primary" />
             Objetivo Diario
           </h2>
-          <span className="text-xs font-medium text-muted-foreground">4/8 Pomodoros</span>
+          <span className="text-xs font-medium text-muted-foreground">{currentPomodoros}/{totalPomodorosGoal} Pomodoros</span>
         </div>
         <Card className="p-4 bg-card rounded-2xl shadow-sm border border-border/50">
-          <Progress value={50} className="h-2.5 mb-3 bg-accent" />
+          <Progress value={progressPercent} className="h-2.5 mb-3 bg-accent" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>En progreso</span>
-            <span>50% completado</span>
+            <span>{Math.round(progressPercent)}% completado</span>
           </div>
         </Card>
       </motion.div>
@@ -85,7 +165,7 @@ export default function Dashboard() {
             <Timer className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-3xl font-semibold text-foreground mb-1">120<span className="text-base font-normal text-muted-foreground ml-1">min</span></p>
+            <p className="text-3xl font-semibold text-foreground mb-1">{currentPomodoros * 25}<span className="text-base font-normal text-muted-foreground ml-1">min</span></p>
             <p className="text-xs text-muted-foreground font-medium">Tiempo de enfoque</p>
           </div>
         </Card>
@@ -96,7 +176,7 @@ export default function Dashboard() {
                <CheckCircle2 className="w-5 h-5 text-secondary-foreground" />
              </div>
              <div>
-               <p className="text-lg font-semibold text-foreground leading-none mb-1">5</p>
+               <p className="text-lg font-semibold text-foreground leading-none mb-1">{completedTasksCount}</p>
                <p className="text-[10px] text-muted-foreground font-medium leading-tight">Tareas listas</p>
              </div>
           </Card>
@@ -105,7 +185,7 @@ export default function Dashboard() {
                <TrendingUp className="w-5 h-5 text-destructive" />
              </div>
              <div>
-               <p className="text-lg font-semibold text-foreground leading-none mb-1">87%</p>
+               <p className="text-lg font-semibold text-foreground leading-none mb-1">{productivity}%</p>
                <p className="text-[10px] text-muted-foreground font-medium leading-tight">Productividad</p>
              </div>
           </Card>
@@ -135,21 +215,27 @@ export default function Dashboard() {
         className="mb-6"
       >
         <h2 className="text-sm font-semibold text-foreground mb-4">Siguiente en la agenda</h2>
-        <Card className="p-4 bg-card rounded-2xl shadow-sm border border-border/50 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate("/app/tasks")}>
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-               <Coffee className="w-5 h-5 text-secondary-foreground" />
+        <Card className="p-4 bg-card rounded-2xl shadow-sm border border-border/50 flex items-center justify-between">
+          <div className="flex items-center gap-3 overflow-hidden mr-2">
+             <div className="w-10 h-10 bg-accent/50 rounded-full flex items-center justify-center shrink-0">
+               {nextTask ? <Target className="w-4 h-4 text-secondary-foreground" /> : <Coffee className="w-4 h-4 text-secondary-foreground" />}
              </div>
-             <div>
-               <p className="text-sm font-medium text-foreground mb-1">Descanso largo</p>
-               <p className="text-xs text-muted-foreground">En 2 pomodoros (50 min)</p>
+             <div className="overflow-hidden">
+               <p className="text-sm font-semibold text-foreground mb-0.5 line-clamp-1">{nextTask ? nextTask.title : "Tómate un descanso"}</p>
+               <p className="text-[11px] text-muted-foreground">{nextTask ? `Estimado: ${nextTask.expected_pomodoros} pomodoros` : "No hay tareas activas"}</p>
              </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          <Button 
+            onClick={() => nextTask ? navigate(`/app/timer?taskId=${nextTask.id}`) : navigate("/app/tasks")}
+            size="sm"
+            className="shrink-0 rounded-full h-8 px-4 text-xs font-semibold shadow-md active:scale-95 transition-transform"
+          >
+            {nextTask ? "Iniciar" : "Ver Tareas"}
+          </Button>
         </Card>
       </motion.div>
 
-      {/* Homework Demo */}
+      {/* Daily Inspiration */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -157,17 +243,16 @@ export default function Dashboard() {
         className="mb-6"
       >
         <h2 className="text-sm font-semibold text-foreground mb-4">Inspiración Diaria</h2>
-        <Card className="p-4 bg-card rounded-2xl shadow-sm border border-primary/20 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate("/app/api-demo")}>
-          <div className="flex items-center gap-4">
-             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+        <Card className="p-4 bg-card rounded-2xl shadow-sm border border-primary/20 flex flex-col justify-between">
+          <div className="flex items-start gap-4 mb-3">
+             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
                <Sprout className="w-5 h-5 text-primary" />
              </div>
              <div>
-               <p className="text-sm font-medium text-foreground mb-1">Cita del Día</p>
-               <p className="text-xs text-muted-foreground">Encuentra tu centro</p>
+               <p className="text-sm font-medium text-foreground italic">"{quote.content}"</p>
+               <p className="text-xs text-muted-foreground mt-1">— {quote.author}</p>
              </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </Card>
       </motion.div>
 

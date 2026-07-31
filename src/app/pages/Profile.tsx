@@ -1,21 +1,52 @@
-import image_imagen_2026_06_26_140104119 from '@/imports/imagen_2026-06-26_140104119.png'
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { User, Bell, Moon, Timer, Coffee, LogOut, ChevronRight, Shield, Award, Sprout } from "lucide-react";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { User, Bell, Moon, Timer, Coffee, LogOut, ChevronRight, Shield, Award, Sprout, Trash2 } from "lucide-react";
 import { cn } from "../components/ui/utils";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../services/supabaseClient";
+import { toast } from "sonner";
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleLogout = () => {
+  const firstName = session?.user?.user_metadata?.first_name || "Semilla";
+  const email = session?.user?.email || "usuario@email.com";
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar tu cuenta? Todos tus datos se perderán para siempre.");
+    if (!confirmed || !session?.user?.id) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', session.user.id);
+      
+      if (error) throw error;
+      
+      await supabase.auth.signOut();
+      toast.success("Cuenta eliminada correctamente");
+      navigate("/");
+    } catch (error) {
+      toast.error("Error al eliminar la cuenta");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -29,10 +60,9 @@ export default function Profile() {
       {/* User Info Card */}
       <div className="flex flex-col items-center mb-10">
         <div className="relative mb-4">
-          <Avatar className="w-28 h-28 border-4 border-card shadow-lg">
-            <AvatarImage src={image_imagen_2026_06_26_140104119} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-medium">
-              S
+          <Avatar className="w-28 h-28 border-4 border-card shadow-lg flex items-center justify-center bg-primary/10">
+            <AvatarFallback className="text-primary text-4xl font-medium bg-transparent">
+              {firstName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="absolute bottom-0 right-0 w-8 h-8 bg-card rounded-full flex items-center justify-center border-2 border-background shadow-sm">
@@ -41,8 +71,8 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Sergio</h2>
-        <p className="text-sm text-muted-foreground mb-3">sergio@email.com</p>
+        <h2 className="text-xl font-semibold text-foreground mb-1">{firstName}</h2>
+        <p className="text-sm text-muted-foreground mb-3">{email}</p>
         <span className="px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-semibold tracking-wide">
           Enfoque Zen
         </span>
@@ -184,10 +214,20 @@ export default function Profile() {
         <Button
           onClick={handleLogout}
           variant="outline"
-          className="w-full h-14 rounded-2xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 hover:border-destructive/50 transition-all font-medium"
+          className="w-full h-14 rounded-2xl border border-border text-foreground bg-card hover:bg-accent hover:text-accent-foreground transition-all font-medium mb-3"
         >
           <LogOut className="w-5 h-5 mr-2" />
           Cerrar sesión
+        </Button>
+
+        <Button
+          onClick={handleDeleteAccount}
+          disabled={isDeleting}
+          variant="outline"
+          className="w-full h-14 rounded-2xl border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 hover:border-destructive/50 transition-all font-medium"
+        >
+          <Trash2 className="w-5 h-5 mr-2" />
+          {isDeleting ? "Eliminando..." : "Eliminar cuenta"}
         </Button>
       </div>
 
