@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentPomodoros = 0;
   Map<String, dynamic>? _nextTask;
   String _quoteContent = "La naturaleza no se apresura, sin embargo todo se logra.";
-  String _quoteAuthor = "Lao TsÃ©";
+  String _quoteAuthor = "Lao Tsé";
   bool _isLoading = true;
 
   @override
@@ -128,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Â¡Buenos dÃ­as, $_firstName!', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
+                      Text('¡Buenos días, $_firstName!', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.5)),
                       const SizedBox(height: 4),
                       Text('Encuentra tu ritmo hoy', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6), fontSize: 14)),
                     ],
@@ -176,7 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Icon(LucideIcons.sprout, color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9), size: 18),
                         const SizedBox(width: 8),
-                        Text('INSPIRACIÃ“N', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9), letterSpacing: 1.0)),
+                        Text('INSPIRACIÓN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9), letterSpacing: 1.0)),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -399,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_nextTask != null ? _nextTask!['title'] : "TÃ³mate un descanso", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text(_nextTask != null ? _nextTask!['title'] : "Tómate un descanso", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 2),
                           Text(_nextTask != null ? "Estimado: ${_nextTask!['expected_pomodoros'] ?? 1} pomodoros" : "No hay tareas activas", style: const TextStyle(fontSize: 11, color: Colors.grey)),
                         ],
