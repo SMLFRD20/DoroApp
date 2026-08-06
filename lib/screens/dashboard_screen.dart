@@ -36,7 +36,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final response = await http.get(Uri.parse('https://dummyjson.com/quotes/random'));
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = json.decode(utf8.decode(response.bodyBytes));
         if (mounted) {
           setState(() {
             _quoteContent = data['quote'];
