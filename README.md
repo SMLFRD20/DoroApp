@@ -1,17 +1,36 @@
-# mobile_app
+# DoroApp
 
-A new Flutter project.
+DoroApp es una aplicación móvil de productividad desarrollada en Flutter que ayuda a estudiantes y profesionales a organizar su tiempo, mantener el enfoque y gestionar sus tareas diarias mediante la técnica Pomodoro.
 
-## Getting Started
+## Características Principales
 
-This project is a starting point for a Flutter application.
+- Temporizador Pomodoro con intervalos de enfoque, descanso corto y descanso largo.
+- Gestión completa de tareas pendientes (crear, editar, completar y vincular con ciclos de trabajo).
+- Panel de inicio dinámico con resumen de progreso diario y frases motivacionales.
+- Módulo de estadísticas detalladas con gráficas de productividad semanal.
+- Gestión de perfil de usuario con edición de datos y carga de avatar.
 
-A few resources to get you started if this is your first Flutter project:
+## Tecnologías Utilizadas
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Frontend: Flutter y Dart.
+- Navegación: GoRouter con transiciones animadas.
+- Gestión de Estado: Provider.
+- Gráficas: fl_chart.
+- Backend y Base de Datos: Supabase (PostgreSQL).
+- Autenticación: Supabase Auth.
+- Almacenamiento: Supabase Storage para fotos de perfil.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Estructura del Proyecto
+
+- `lib/main.dart`: Punto de entrada de la aplicación y configuración de temas y rutas.
+- `lib/screens/`: Pantallas principales de la aplicación (Login, Registro, Dashboard, Temporizador, Tareas, Estadísticas y Perfil).
+- `lib/services/`: Proveedores de autenticación y lógica de conexión con Supabase.
+- `lib/widgets/`: Componentes de interfaz reutilizables.
+
+## Requisitos de Instalación
+
+1. Clonar el repositorio.
+2. Asegurarse de tener instalado Flutter SDK (versión igual o superior a 3.12.2).
+3. Ejecutar `flutter pub get` para instalar las dependencias.
+4. Configurar las credenciales de Supabase en un archivo `.env` en la raíz del proyecto.
+5. Compilar e instalar la aplicación ejecutando `flutter run` o generar el instalador con `flutter build apk --release`.
